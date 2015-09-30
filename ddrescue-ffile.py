@@ -7,12 +7,14 @@ import hashlib
 from tqdm import tqdm
 import getopt
 import sys
+import time
 
 class ddr(object):
   mounted = {}
   def __init__(self, filesystem, logfile):
     self.logfile = os.path.abspath(logfile)
     self.filesystem = os.path.abspath(filesystem)
+    self.app_logfile = open('ddrescue-ffile-{}.log'.format(time.strftime("%Y-%m-%d_%H:%M:%S", time.gmtime())), 'wb')
     
     if os.path.isfile(self.logfile) is False:
       raise Exception('ddrescue log file {} not found'.format(log))
@@ -55,7 +57,10 @@ class ddr(object):
     self.log('Building MD5 checksum list...')
     
     for file in tqdm(files):
-      md5list[file.replace(mounted, '')] = self.file2md5(file)
+      if os.path.isfile(file):
+        md5list[file.replace(mounted, '')] = self.file2md5(file)
+      else:
+        md5list[file.replace(mounted, '')] = False
 
     self.log('Done.')
     return md5list
@@ -94,6 +99,9 @@ class ddr(object):
 
   def log(self, message):
     print(message)
+    self.app_logfile.write(message + "\n")
+    self.app_logfile.flush()
+
     
   def start(self):
     
@@ -131,7 +139,12 @@ class ddr(object):
         if md5list_modified[patho] != md5list_original[patho]:
           corupted += 1
           self.log('File {} seems corrupted, {} != {}'.format(patho, md5list_original[patho], md5list_modified[patho]))
-      
+        elif md5list_modified[patho] == False and md5list_original[patho] == False:
+          self.log('Failed to create md5sum for {}'.format(patho))
+        elif md5list_modified[patho] == False or md5list_original[patho] == False:
+          corupted += 1
+          self.log('File {} seems corrupted, {} != {}'.format(patho, md5list_original[patho], md5list_modified[patho]))
+          
       if corupted > 0:
         self.log('{} corupted files has been found :-('.format(corupted))
       else:
@@ -140,10 +153,13 @@ class ddr(object):
     except:
       raise
     finally:
-    # Umount all mounted 
+      # Umount all mounted 
       clear_mounts = self.mounted.copy()
       for mount in clear_mounts:
         self.umount(mount)
+      
+      self.app_logfile.close()
+      
     
 def usage():
   print('Usage:')
