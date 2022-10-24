@@ -19,7 +19,7 @@ class MountInfo:
     source: Path
     target: Path = Path(tempfile.mkdtemp())
     offset: int = None
-    size: int = None
+    size_limit: int = None
 
 
 class DdrescueFfile(object):
@@ -40,7 +40,15 @@ class DdrescueFfile(object):
         if mount_info.identifier not in self.mounted:
             try:
                 self.log('Mounting filesystem {} to {}'.format(mount_info.identifier, mount_info.target))
-                self.command(['mount', '-o', 'ro', '-t', 'auto', str(mount_info.source), str(mount_info.target)])
+                mount_options = ['ro']
+                if mount_info.offset:
+                    mount_options.append('offset={}'.format(mount_info.offset))
+
+                if mount_info.size_limit:
+                    mount_options.append('sizelimit={}'.format(mount_info.size_limit))
+
+                mount_command = ['mount', '-o', ','.join(mount_options), '-t', 'auto', str(mount_info.source), str(mount_info.target)]
+                self.command(mount_command)
                 self.log('Done.')
                 self.mounted[mount_info.identifier] = mount_info
             except:
@@ -137,8 +145,12 @@ class DdrescueFfile(object):
                 partition.get('type')
             ))
 
+        sector_size = partition_table.get('sectorsize')
+
         for partition in partitions:
-            yield MountInfo(partition.get('node'), path, offset=partition.get('start'), size=partition.get('size'))
+            offset = partition.get('start') * sector_size
+            size_limit = partition.get('size') * sector_size
+            yield MountInfo(partition.get('node'), path, offset=offset, size_limit=size_limit)
 
 
     def start(self):
@@ -210,9 +222,10 @@ class DdrescueFfile(object):
             raise
         finally:
             # Umount all mounted
+            self.log('Unmouting all active mount points!')
             clear_mounts = self.mounted.copy()
-            for mount_identifier, mount_info in clear_mounts.items():
-                self.umount(mount_info)
+            #for mount_identifier, mount_info in clear_mounts.items():
+            #    self.umount(mount_info)
 
             self.app_logfile.close()
 

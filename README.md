@@ -10,10 +10,10 @@ Tool for identifying corrupted files in image created by ddrescue
 ## Usage
 
 ```
-ddrescue-ffile.py [image] [logfile]
+sudo ddrescue-ffile.py [image] [logfile]
 
 Like:
-ddrescue-ffile.py ~/rescued-sda.img ~/ddrescue-sda.log
+sudo ddrescue-ffile.py ~/rescued-sda.img ~/ddrescue-sda.log
 
 Where:
 ~/rescued-sda.img is path to rescued image
