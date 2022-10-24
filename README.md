@@ -4,6 +4,9 @@
 
 Tool for identifying corrupted files in image created by ddrescue
 
+# Always run this tool only on copy of your image! Always have a backup!
+
+
 ## Usage
 
 ```
