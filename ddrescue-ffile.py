@@ -69,7 +69,8 @@ class DdrescueFfile(object):
     def mounted2md5list(self, mounted: Path) -> dict:
         md5list = {}
         self.log('Scaning filesystem...')
-        files = list(mounted.rglob('*'))
+        #files = list(mounted.rglob('*'))  #!FIXME this crashes for who knows why (Input output error), on Users/USER/AppData/Local/Steam/htmlcache/Session Storage/
+        files = [Path(os.path.join(dp, f)) for dp, dn, filenames in os.walk(str(mounted.absolute())) for f in filenames]
         self.log('Done.')
 
         self.log('Building MD5 checksum list...')
