@@ -224,8 +224,8 @@ class DdrescueFfile(object):
             # Umount all mounted
             self.log('Unmouting all active mount points!')
             clear_mounts = self.mounted.copy()
-            #for mount_identifier, mount_info in clear_mounts.items():
-            #    self.umount(mount_info)
+            for mount_identifier, mount_info in clear_mounts.items():
+                self.umount(mount_info)
 
             self.app_logfile.close()
 
